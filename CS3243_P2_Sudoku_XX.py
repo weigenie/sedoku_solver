@@ -23,7 +23,7 @@ class Sudoku(object):
         current_values_col = []
         current_values_square = []
         for i in range(0, 9):
-            possible_values.append([])
+            possible_values.append([[] for j in range(9)])
             current_values_row.append(set())
             current_values_col.append(set())
         for i in range(0, 3):
@@ -34,13 +34,13 @@ class Sudoku(object):
             for j in range(0, 9):
                 if puzzle[i][j] != 0:
                     val = puzzle[i][j]
-                    possible_values.append(puzzle[i][j])
+                    possible_values[i][j] = [val]
                     current_values_row[i].add(val)
                     current_values_col[j].add(val)
-                    current_values_square[math.floor(i/3)][math.floor(j/3)].add(val)
+                    current_values_square[int(i/3)][int(j/3)].add(val)
 
                 else:
-                    possible_values[i].append([1, 2, 3, 4, 5, 6, 7, 8, 9])
+                    possible_values[i][j].append([1, 2, 3, 4, 5, 6, 7, 8, 9])
 
         # maintain AC-3 arc consistency
         # remove existing values from possible values in:
@@ -48,7 +48,7 @@ class Sudoku(object):
         for i in range(0, 9):
             for j in range(0 ,9):
                 curr = possible_values[i][j]
-                if isPreFilled(puzzle, i, j):
+                if self.isPreFilled(puzzle, i, j):
                     continue
                 for existing_value in current_values_row[i]:
                     curr.remove(existing_value)
@@ -57,7 +57,7 @@ class Sudoku(object):
         for i in range(0, 9):
             for j in range(0 ,9):
                 curr = possible_values[i][j]
-                if isPreFilled(puzzle, i, j):
+                if self.isPreFilled(puzzle, i, j):
                     continue
                 for existing_value in current_values_col[j]:
                     curr.remove(existing_value)
@@ -66,7 +66,7 @@ class Sudoku(object):
         for i in range(0, 9):
             for j in range(0 ,9):
                 curr = possible_values[i][j]
-                if isPreFilled(puzzle, i, j):
+                if self.isPreFilled(puzzle, i, j):
                     continue
                 for existing_value in current_values_square[math.floor(i/3)][math.floor(j/3)]:
                     curr.remove(existing_value)
@@ -81,12 +81,12 @@ class Sudoku(object):
     # Note that our evaluation scripts only call the solve method.
     # Any other methods that you write should be used within the solve() method.
 
-    def isPreFilled(puzzle, row, col):
+    def isPreFilled(self, puzzle, row, col):
         if type(puzzle[row][col]) is list:
             return False
         return True
 
-    def check_row(puzzle, row, current_values_row):
+    def check_row(self, puzzle, row, current_values_row):
         comparison_set = current_values_row[row]
         curr_row = puzzle[row]
         for var in curr_row:
@@ -95,7 +95,7 @@ class Sudoku(object):
         return True
 
     
-    def check_col(puzzle, col, current_values_col):
+    def check_col(self, puzzle, col, current_values_col):
         comparison_set = current_values_col[col]
         for i in range(0, 9):
             var = puzzle[i][col]
@@ -104,7 +104,7 @@ class Sudoku(object):
         return True
 
     # square number is the top left cell of the square
-    def check_square(puzzle, square_row, square_col, current_values_square):
+    def check_square(self, puzzle, square_row, square_col, current_values_square):
         comparison_set = current_values_square[square_row][square_col]
         for i in range(0, 3):
             for j in range(0, 3):
