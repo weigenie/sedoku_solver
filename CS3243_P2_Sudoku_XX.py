@@ -82,9 +82,7 @@ class Sudoku(object):
     # Any other methods that you write should be used within the solve() method.
 
     def isPreFilled(self, puzzle, row, col):
-        if type(puzzle[row][col]) is list:
-            return False
-        return True
+        return type(puzzle[row][col]) is not list
 
     def check_row(self, puzzle, row, current_values_row):
         comparison_set = current_values_row[row]
