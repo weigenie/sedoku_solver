@@ -22,16 +22,16 @@ class Sudoku(object):
         current_values_row = []
         current_values_col = []
         current_values_square = []
-        for i in range(0, 9):
+        for i in range(9):
             possible_values.append([[] for j in range(9)])
             current_values_row.append(set())
             current_values_col.append(set())
-        for i in range(0, 3):
+        for i in range(3):
             current_values_square.append([set(), set(), set()])
 
         # populating of data
-        for i in range(0, 9):
-            for j in range(0, 9):
+        for i in range(9):
+            for j in range(9):
                 if puzzle[i][j] != 0:
                     val = puzzle[i][j]
                     possible_values[i][j] = [val]
@@ -45,8 +45,8 @@ class Sudoku(object):
         # maintain AC-3 arc consistency
         # remove existing values from possible values in:
         # rows
-        for i in range(0, 9):
-            for j in range(0 ,9):
+        for i in range(9):
+            for j in range(9):
                 curr = possible_values[i][j]
                 if self.isPreFilled(puzzle, i, j):
                     continue
@@ -54,8 +54,8 @@ class Sudoku(object):
                     curr.remove(existing_value)
 
         # col
-        for i in range(0, 9):
-            for j in range(0 ,9):
+        for i in range(9):
+            for j in range(9):
                 curr = possible_values[i][j]
                 if self.isPreFilled(puzzle, i, j):
                     continue
@@ -63,8 +63,8 @@ class Sudoku(object):
                     curr.remove(existing_value)
 
         # squares
-        for i in range(0, 9):
-            for j in range(0 ,9):
+        for i in range(9):
+            for j in range(9):
                 curr = possible_values[i][j]
                 if self.isPreFilled(puzzle, i, j):
                     continue
@@ -97,7 +97,7 @@ class Sudoku(object):
     
     def check_col(self, puzzle, col, current_values_col):
         comparison_set = current_values_col[col]
-        for i in range(0, 9):
+        for i in range(9):
             var = puzzle[i][col]
             if var in comparison_set:
                 return False
@@ -106,8 +106,8 @@ class Sudoku(object):
     # square number is the top left cell of the square
     def check_square(self, puzzle, square_row, square_col, current_values_square):
         comparison_set = current_values_square[square_row][square_col]
-        for i in range(0, 3):
-            for j in range(0, 3):
+        for i in range(3):
+            for j in range(3):
                 var = puzzle[square_row + i][square_col + j]
                 if var in comparison_set:
                     return False
