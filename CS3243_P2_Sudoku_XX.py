@@ -18,59 +18,72 @@ class Sudoku(object):
         # TODO: Write your code here
 
         # initialisation of data structures
-        possible_values = []
-        current_values_row = []
-        current_values_col = []
-        current_values_square = []
-        for i in range(9):
-            possible_values.append([[] for j in range(9)])
-            current_values_row.append(set())
-            current_values_col.append(set())
-        for i in range(3):
-            current_values_square.append([set(), set(), set()])
+        possible_values = [[0 for j in range(9)] for i in range(9)]
+        current_values_row = [0 for i in range(9)]
+        current_values_col = [0 for j in range(9)]
+        current_values_square = [[0 for j in range(3)] for i in range(3)]
+
+        # helper functions for bitwise operations
+        set_bitmask = lambda val: 1 << (val - 1)
+        clear_bitmask = lambda val: 511 - set_bitmask(val) # 511 = 0b111111111
+
+        powers_of_two = [i in (1, 2, 4, 8, 16, 32, 64, 128, 256) for i in range(512)]
+        is_singleton = lambda val: powers_of_two[val]
+        get_singleton = lambda val: int(math.log(val, 2))
 
         # populating of data
         for i in range(9):
             for j in range(9):
                 if puzzle[i][j] != 0:
-                    val = puzzle[i][j]
-                    possible_values[i][j] = [val]
-                    current_values_row[i].add(val)
-                    current_values_col[j].add(val)
-                    current_values_square[int(i/3)][int(j/3)].add(val)
-
+                    val = set_bitmask(puzzle[i][j])
+                    possible_values[i][j] = val
+                    current_values_row[i] |= val
+                    current_values_col[j] |= val
+                    current_values_square[int(i/3)][int(j/3)] |= val
                 else:
-                    possible_values[i][j].append([1, 2, 3, 4, 5, 6, 7, 8, 9])
+                    possible_values[i][j] = 511
 
         # maintain AC-3 arc consistency
         # remove existing values from possible values in:
-        # rows
-        for i in range(9):
-            for j in range(9):
-                curr = possible_values[i][j]
-                if self.isPreFilled(puzzle, i, j):
-                    continue
-                for existing_value in current_values_row[i]:
-                    curr.remove(existing_value)
 
-        # col
-        for i in range(9):
-            for j in range(9):
-                curr = possible_values[i][j]
-                if self.isPreFilled(puzzle, i, j):
-                    continue
-                for existing_value in current_values_col[j]:
-                    curr.remove(existing_value)
+        while True:
+            # Can be optimized to AC-3 later.
+            # Wikipedia:
+            # A simplistic algorithm would cycle over the pairs of variables, enforcing arc-consistency,
+            # repeating the cycle until no domains change for a whole cycle.
+            changes = False
 
-        # squares
-        for i in range(9):
-            for j in range(9):
-                curr = possible_values[i][j]
-                if self.isPreFilled(puzzle, i, j):
-                    continue
-                for existing_value in current_values_square[math.floor(i/3)][math.floor(j/3)]:
-                    curr.remove(existing_value)
+            # rows, cols, squares
+            for i in range(9):
+                for j in range(9):
+                    if is_singleton(possible_values[i][j]):
+                        continue # fixed, do nothing as it is already represented in current_values
+                    # restrict newVal based on the current_values
+                    newVal = possible_values[i][j] & ~current_values_row[i] & ~current_values_col[j] & ~current_values_square[int(i/3)][int(j/3)]
+                    # if it changes, set a flag to iterate again
+                    if newVal != possible_values[i][j]:
+                        changes = True
+                        possible_values[i][j] = newVal
+                        # if this is a singleton, add it to the current_values
+                        if is_singleton(newVal):
+                            current_values_row[i] |= set_bitmask(newVal)
+                            current_values_col[j] |= set_bitmask(newVal)
+                            current_values_square[int(i/3)][int(j/3)] |= set_bitmask(newVal)
+            
+            if not changes:
+                break
 
+        # verify arc consistency (a singleton value is not repeated in any rows/cols/squares domains)
+        for i in possible_values:
+            print [bin(j) for j in i]
+        
+        def goal_test(possible_values):
+            for i in range(9):
+                for j in range(9):
+                    if not is_singleton(possible_values[i][j])
+                        return False
+            return True
+        
         # backtracking search
 
         # self.ans is a list of lists
@@ -82,7 +95,7 @@ class Sudoku(object):
     # Any other methods that you write should be used within the solve() method.
 
     def isPreFilled(self, puzzle, row, col):
-        return type(puzzle[row][col]) is not list
+        return puzzle[row][col] != 0
 
     def check_row(self, puzzle, row, current_values_row):
         comparison_set = current_values_row[row]
