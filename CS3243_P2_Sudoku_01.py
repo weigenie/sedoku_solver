@@ -30,26 +30,33 @@ class Sudoku(object):
         squareMissingN = copy.deepcopy(rowMissingN)
         # numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9]
         
-        # self.possibleValues = [[[[True] * 10] * 9] * 9]
+        self.domains = [[[True] * 10 for i in range(9)] for j in range(9)]
         self.constraintChecks = [rowMissingN, colMissingN, squareMissingN]
         self.numAssignCount = [0] * 10
+
+        # print(len(self.domains))
+        # print(len(self.domains[0]))
+        # print(len(self.domains[0][0]))
 
         for i in range(9):
             for j in range(9):
                 curr = self.ans[i][j]
 
                 if curr != 0:
-                    squareNum = self.getSquareNum(i, j)
+                    # print("assigning: " + str(curr))
+                    self.assign((i, j, []), curr)
+                    # squareNum = self.getSquareNum(i, j)
 
-                    rowMissingN[i][curr] = False
-                    colMissingN[j][curr] = False
-                    squareMissingN[squareNum][curr] = False
-                    self.numAssignCount[curr] += 1
-                    # self.possibleValues[i][j] = [[False] * 10]
-                    # self.possibleValues[i][j][curr] = True
+                    # rowMissingN[i][curr] = False
+                    # colMissingN[j][curr] = False
+                    # squareMissingN[squareNum][curr] = False
+                    # self.numAssignCount[curr] += 1
+                    # self.domains[i][j] = [False] * 10
+                    # self.domains[i][j][curr] = True
 
     def getSquareNum(self, i, j):
-        return int(math.floor(i/3) + math.floor(j/3) * 3)
+        # return int(math.floor(i/3) + math.floor(j/3) * 3)
+        return i // 3 + (j // 3) * 3
 
     def backtrack(self):
         var = self.getUnassignedVariable()
@@ -101,16 +108,22 @@ class Sudoku(object):
         return returnVariable
 
     def getDomain(self, i, j):
-        rowMissingN = self.constraintChecks[0][i]
-        colMissingN = self.constraintChecks[1][j]
-        squareMissingN = self.constraintChecks[2][self.getSquareNum(i, j)]
-
         domain = []
         for num in range(1, 10):
-            if rowMissingN[num] and colMissingN[num] and squareMissingN[num]:
+            if (self.domains[i][j][num]):
                 domain.append(num)
-
         return domain
+
+        # rowMissingN = self.constraintChecks[0][i]
+        # colMissingN = self.constraintChecks[1][j]
+        # squareMissingN = self.constraintChecks[2][self.getSquareNum(i, j)]
+
+        # domain = []
+        # for num in range(1, 10):
+        #     if rowMissingN[num] and colMissingN[num] and squareMissingN[num]:
+        #         domain.append(num)
+
+        # return domain
 
     # using least constraining value heuristic
     # get domain in the order of least constraining to most constraining
@@ -132,6 +145,22 @@ class Sudoku(object):
         squareMissingN[num] = False
         self.numAssignCount[num] = self.numAssignCount[num] + 1
 
+        self.infer(var, num)
+
+    def infer(self, var, num):
+        i, j, domain = var
+        for c in range(9):
+            self.domains[i][c][num] = False
+
+        for r in range(9):
+            self.domains[r][j][num] = False
+
+        bigRow = i // 3
+        bigCol = j // 3
+        for r in range(3):
+            for c in range(3):
+                self.domains[r + bigRow][c + bigCol][num] = False
+
     def unassign(self, var, num):
         i, j, domain = var
         rowMissingN = self.constraintChecks[0][i]
@@ -143,6 +172,32 @@ class Sudoku(object):
         colMissingN[num] = True
         squareMissingN[num] = True
         self.numAssignCount[num] = self.numAssignCount[num] - 1
+
+        self.uninfer(var, num)
+
+    def uninfer(self, var, num):
+        i, j, domain = var
+        rowMissingN = self.constraintChecks[0][i]
+        colMissingN = self.constraintChecks[1][j]
+        squareMissingN = self.constraintChecks[2][self.getSquareNum(i, j)]
+
+        for c in range(9):
+            if not colMissingN[num]:
+                self.domains[i][c][num] = True
+
+        for r in range(9):
+            if not rowMissingN[num]:
+                self.domains[r][j][num] = True
+
+        bigRow = i // 3
+        bigCol = j // 3
+        squareNum = self.getSquareNum(i, j)
+        if not squareMissingN[num]:
+            for r in range(3):
+                for c in range(3):
+                    self.domains[r + bigRow][c + bigCol][num] = True
+
+        
         
 if __name__ == "__main__":
     # STRICTLY do NOT modify the code in the main function here
