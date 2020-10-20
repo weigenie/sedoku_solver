@@ -53,45 +53,48 @@ class Sudoku(object):
                 else:
                     self.unassigned.add((i, j))
                     
-    def getSquareNum(self, i, j):
-        return self.squareRef[i][j]
+    # def getSquareNum(self, i, j): # migrated; unused
+    #     return self.squareRef[i][j]
 
     def backtrack(self):
+        domainOrder = range(1, 10)
+        domainOrder.sort(key = lambda x: self.numAssignCount[x])
 
         # getUnassignedVariable
         minDomainSize = 99
         var = None
-        for pair in self.unassigned:
-            i, j = pair
-            curr = self.ans[i][j]
+        for i, j in self.unassigned:
             rowMissingN = self.constraintChecks[0][i]
             colMissingN = self.constraintChecks[1][j]
             squareMissingN = self.constraintChecks[2][self.squareRef[i][j]]
 
             domain = []
-            for num in range(1, 10):
+            for num in domainOrder:
                 if rowMissingN[num] and colMissingN[num] and squareMissingN[num]:
                     domain.append(num)
             domainSize = len(domain)
 
-            if domainSize == 0:
+            if domainSize >= minDomainSize:
+                continue
+            elif domainSize == 0:
                 return False
-
             elif domainSize == 1:
                 var = (i, j, domain)
                 break
             else:
-                if domainSize < minDomainSize:
-                    var = (i, j, domain)
-                    minDomainSize = domainSize
+                var = (i, j, domain)
+                minDomainSize = domainSize
 
-        var[2].sort(key = lambda x: self.numAssignCount[x])
+        if var is None:
+            return True
+
         i, j, domain = var
+        domain.sort(key = lambda x: self.numAssignCount[x])
         rowMissingN = self.constraintChecks[0][i]
         colMissingN = self.constraintChecks[1][j]
         squareMissingN = self.constraintChecks[2][self.squareRef[i][j]]
         self.unassigned.remove((i, j))
-        for num in var[2]:
+        for num in domain:
             # assign
             self.ans[i][j] = num
             rowMissingN[num] = False
@@ -99,7 +102,7 @@ class Sudoku(object):
             squareMissingN[num] = False
             self.numAssignCount[num] = self.numAssignCount[num] + 1
             # backtracking
-            if len(self.unassigned) == 0 or self.backtrack():
+            if self.backtrack():
                 return True
             # unassign
             rowMissingN[num] = True
@@ -112,98 +115,98 @@ class Sudoku(object):
 
     # using the minimum remaining value heuristic
     # get the cell with the minimum domain size
-    def getUnassignedVariable(self): # migrated; unused
-        minDomainSize = 99
-        returnVariable = None
+    # def getUnassignedVariable(self): # migrated; unused
+    #     minDomainSize = 99
+    #     returnVariable = None
 
-        for pair in self.unassigned:
-            i, j = pair
-            curr = self.ans[i][j]
+    #     for pair in self.unassigned:
+    #         i, j = pair
+    #         curr = self.ans[i][j]
 
-            if curr != 0:
-                continue
+    #         if curr != 0:
+    #             continue
 
-            rowMissingN = self.constraintChecks[0][i]
-            colMissingN = self.constraintChecks[1][j]
-            squareMissingN = self.constraintChecks[2][self.getSquareNum(i, j)]
+    #         rowMissingN = self.constraintChecks[0][i]
+    #         colMissingN = self.constraintChecks[1][j]
+    #         squareMissingN = self.constraintChecks[2][self.getSquareNum(i, j)]
 
-            domain = []
-            for num in range(1, 10):
-                if rowMissingN[num] and colMissingN[num] and squareMissingN[num]:
-                    domain.append(num)
-            domainSize = len(domain)
+    #         domain = []
+    #         for num in range(1, 10):
+    #             if rowMissingN[num] and colMissingN[num] and squareMissingN[num]:
+    #                 domain.append(num)
+    #         domainSize = len(domain)
 
-            if domainSize == 0:
-                return False
+    #         if domainSize == 0:
+    #             return False
 
-            elif domainSize == 1:
-                return (i, j, domain)
+    #         elif domainSize == 1:
+    #             return (i, j, domain)
 
-            else:
-                if domainSize < minDomainSize:
-                    returnVariable = (i, j, domain)
-                    minDomainSize = domainSize
+    #         else:
+    #             if domainSize < minDomainSize:
+    #                 returnVariable = (i, j, domain)
+    #                 minDomainSize = domainSize
 
 
-        return returnVariable
+    #     return returnVariable
 
-    def getDomain(self, i, j): # migrated; unused
-        rowMissingN = self.constraintChecks[0][i]
-        colMissingN = self.constraintChecks[1][j]
-        squareMissingN = self.constraintChecks[2][self.getSquareNum(i, j)]
+    # def getDomain(self, i, j): # migrated; unused
+    #     rowMissingN = self.constraintChecks[0][i]
+    #     colMissingN = self.constraintChecks[1][j]
+    #     squareMissingN = self.constraintChecks[2][self.getSquareNum(i, j)]
 
-        domain = []
-        for num in range(1, 10):
-            if rowMissingN[num] and colMissingN[num] and squareMissingN[num]:
-                domain.append(num)
-        return domain
+    #     domain = []
+    #     for num in range(1, 10):
+    #         if rowMissingN[num] and colMissingN[num] and squareMissingN[num]:
+    #             domain.append(num)
+    #     return domain
 
     # using least constraining value heuristic
     # get domain in the order of least constraining to most constraining
     # least constraining value is the number that has been assigned the least
-    def getSortedDomain(self, var): # migrated; unused
-        originalDomain = var[2]
-        originalDomain.sort(key = lambda x: self.numAssignCount[x])
-        return originalDomain
+    # def getSortedDomain(self, var): # migrated; unused
+    #     originalDomain = var[2]
+    #     originalDomain.sort(key = lambda x: self.numAssignCount[x])
+    #     return originalDomain
 
-    def assign(self, var, num): # migrated; unused
-        i, j, domain = var
-        rowMissingN = self.constraintChecks[0][i]
-        colMissingN = self.constraintChecks[1][j]
-        squareMissingN = self.constraintChecks[2][self.getSquareNum(i, j)]
+    # def assign(self, var, num): # migrated; unused
+    #     i, j, domain = var
+    #     rowMissingN = self.constraintChecks[0][i]
+    #     colMissingN = self.constraintChecks[1][j]
+    #     squareMissingN = self.constraintChecks[2][self.getSquareNum(i, j)]
 
-        self.ans[i][j] = num
-        self.unassigned.remove((i, j))
-        rowMissingN[num] = False
-        colMissingN[num] = False
-        squareMissingN[num] = False
-        self.numAssignCount[num] = self.numAssignCount[num] + 1
+    #     self.ans[i][j] = num
+    #     self.unassigned.remove((i, j))
+    #     rowMissingN[num] = False
+    #     colMissingN[num] = False
+    #     squareMissingN[num] = False
+    #     self.numAssignCount[num] = self.numAssignCount[num] + 1
     
-    def assignInit(self, var, num): # migrated; unused
-        # same as assign but without the self.unassigned removal
-        i, j, domain = var
-        rowMissingN = self.constraintChecks[0][i]
-        colMissingN = self.constraintChecks[1][j]
-        squareMissingN = self.constraintChecks[2][self.getSquareNum(i, j)]
+    # def assignInit(self, var, num): # migrated; unused
+    #     # same as assign but without the self.unassigned removal
+    #     i, j, domain = var
+    #     rowMissingN = self.constraintChecks[0][i]
+    #     colMissingN = self.constraintChecks[1][j]
+    #     squareMissingN = self.constraintChecks[2][self.getSquareNum(i, j)]
 
-        self.ans[i][j] = num
-        rowMissingN[num] = False
-        colMissingN[num] = False
-        squareMissingN[num] = False
-        self.numAssignCount[num] = self.numAssignCount[num] + 1
+    #     self.ans[i][j] = num
+    #     rowMissingN[num] = False
+    #     colMissingN[num] = False
+    #     squareMissingN[num] = False
+    #     self.numAssignCount[num] = self.numAssignCount[num] + 1
 
-    def unassign(self, var, num): # migrated, unused
-        i, j, domain = var
-        rowMissingN = self.constraintChecks[0][i]
-        colMissingN = self.constraintChecks[1][j]
-        squareMissingN = self.constraintChecks[2][self.getSquareNum(i, j)]
+    # def unassign(self, var, num): # migrated, unused
+    #     i, j, domain = var
+    #     rowMissingN = self.constraintChecks[0][i]
+    #     colMissingN = self.constraintChecks[1][j]
+    #     squareMissingN = self.constraintChecks[2][self.getSquareNum(i, j)]
 
-        self.ans[i][j] = 0
-        self.unassigned.add((i, j))
-        rowMissingN[num] = True
-        colMissingN[num] = True
-        squareMissingN[num] = True
-        self.numAssignCount[num] = self.numAssignCount[num] - 1
+    #     self.ans[i][j] = 0
+    #     self.unassigned.add((i, j))
+    #     rowMissingN[num] = True
+    #     colMissingN[num] = True
+    #     squareMissingN[num] = True
+    #     self.numAssignCount[num] = self.numAssignCount[num] - 1
 
         
         
