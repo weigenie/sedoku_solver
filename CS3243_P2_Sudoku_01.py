@@ -27,11 +27,12 @@ class Sudoku(object):
 
     def initDataStructure(self):
         rowMissingN = [[True] * 10 for i in range(9)]
-        colMissingN = copy.deepcopy(rowMissingN)
-        squareMissingN = copy.deepcopy(rowMissingN)
+        colMissingN = [[True] * 10 for i in range(9)]
+        squareMissingN = [[True] * 10 for i in range(9)]
         
         self.constraintChecks = [rowMissingN, colMissingN, squareMissingN]
         self.numAssignCount = [0] * 10
+        self.unassigned = set()
 
         for i in range(9):
             for j in range(9):
@@ -39,7 +40,9 @@ class Sudoku(object):
 
                 if curr != 0:
                     # print("assigning: " + str(curr))
-                    self.assign((i, j, []), curr)
+                    self.assignInit((i, j, []), curr)
+                else:
+                    self.unassigned.add((i, j))
                     
     def getSquareNum(self, i, j):
         return i // 3 + (j // 3) * 3
@@ -52,8 +55,8 @@ class Sudoku(object):
         elif var == False:
             return False
 
-        domain = self.getSortedDomain(var)
-        for num in domain:
+        var[2].sort(key = lambda x: self.numAssignCount[x])
+        for num in var[2]:
             self.assign(var, num)
 
             if self.backtrack():
@@ -67,26 +70,26 @@ class Sudoku(object):
         minDomainSize = 99
         returnVariable = None
 
-        for i in range(9):
-            for j in range(9):
-                curr = self.ans[i][j]
+        for pair in self.unassigned:
+            i, j = pair
+            curr = self.ans[i][j]
 
-                if curr != 0:
-                    continue
+            if curr != 0:
+                continue
 
-                domain = self.getDomain(i, j)
-                domainSize = len(domain)
+            domain = self.getDomain(i, j)
+            domainSize = len(domain)
 
-                if domainSize == 0:
-                    return False
+            if domainSize == 0:
+                return False
 
-                elif domainSize == 1:
-                    return (i, j, domain)
+            elif domainSize == 1:
+                return (i, j, domain)
 
-                else:
-                    if domainSize < minDomainSize:
-                        returnVariable = (i, j, domain)
-                        minDomainSize = domainSize
+            else:
+                if domainSize < minDomainSize:
+                    returnVariable = (i, j, domain)
+                    minDomainSize = domainSize
 
 
         return returnVariable
@@ -117,6 +120,20 @@ class Sudoku(object):
         squareMissingN = self.constraintChecks[2][self.getSquareNum(i, j)]
 
         self.ans[i][j] = num
+        self.unassigned.remove((i, j))
+        rowMissingN[num] = False
+        colMissingN[num] = False
+        squareMissingN[num] = False
+        self.numAssignCount[num] = self.numAssignCount[num] + 1
+    
+    def assignInit(self, var, num):
+        # same as assign but without the self.unassigned removal
+        i, j, domain = var
+        rowMissingN = self.constraintChecks[0][i]
+        colMissingN = self.constraintChecks[1][j]
+        squareMissingN = self.constraintChecks[2][self.getSquareNum(i, j)]
+
+        self.ans[i][j] = num
         rowMissingN[num] = False
         colMissingN[num] = False
         squareMissingN[num] = False
@@ -129,6 +146,7 @@ class Sudoku(object):
         squareMissingN = self.constraintChecks[2][self.getSquareNum(i, j)]
 
         self.ans[i][j] = 0
+        self.unassigned.add((i, j))
         rowMissingN[num] = True
         colMissingN[num] = True
         squareMissingN[num] = True
