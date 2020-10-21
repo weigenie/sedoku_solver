@@ -51,7 +51,7 @@ class Sudoku(object):
                     squareMissingN[num] = False
                     self.numAssignCount[num] = self.numAssignCount[num] + 1
                 else:
-                    self.unassigned.add((i, j))
+                    self.unassigned.add((i, j, i + 9 * j))
                     
     # def getSquareNum(self, i, j): # migrated; unused
     #     return self.squareRef[i][j]
@@ -63,7 +63,7 @@ class Sudoku(object):
         # getUnassignedVariable
         minDomainSize = 99
         var = None
-        for i, j in self.unassigned:
+        for i, j, unused in self.unassigned:
             rowMissingN = self.constraintChecks[0][i]
             colMissingN = self.constraintChecks[1][j]
             squareMissingN = self.constraintChecks[2][self.squareRef[i][j]]
@@ -93,7 +93,7 @@ class Sudoku(object):
         rowMissingN = self.constraintChecks[0][i]
         colMissingN = self.constraintChecks[1][j]
         squareMissingN = self.constraintChecks[2][self.squareRef[i][j]]
-        self.unassigned.remove((i, j))
+        self.unassigned.remove((i, j, i + 9 * j))
         for num in domain:
             # assign
             self.ans[i][j] = num
@@ -111,7 +111,7 @@ class Sudoku(object):
             self.numAssignCount[num] = self.numAssignCount[num] - 1
 
         self.ans[i][j] = 0
-        self.unassigned.add((i, j))
+        self.unassigned.add((i, j, i + 9 * j))
 
     # using the minimum remaining value heuristic
     # get the cell with the minimum domain size
